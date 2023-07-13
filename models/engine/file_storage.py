@@ -22,18 +22,20 @@ class FileStorage:
 
     def all(self, cls=None):
         """returns a dictionary
+        Args:
+            cls: Name of class to list
         Return:
             returns a dictionary of __object
         """
-        if not cls:
-            return self.__objects
+        if cls:
+            dict_store = {}
+            for obj_id in self.__objects:
+                obj_cls = self.__objects[obj_id].__class__
+                if cls is obj_cls:
+                    dict_store[obj_id] = self.__objects[obj_id]
+            return dict_store
         else:
-            dic_result = {}
-            for key, val in self.__objects.items():
-                name = key.split('.')
-                if name[0] == cls.__name__:
-                    dic_result.update({key: val})
-            return dic_result
+            return self.__objects
 
     def new(self, obj):
         """sets __object to given obj
@@ -63,19 +65,20 @@ class FileStorage:
                     self.__objects[key] = value
         except FileNotFoundError:
             pass
+        except Exception as e:
+            pass
 
     def delete(self, obj=None):
-        """delete obj from __objects if it’s inside"""
+        """ Delete obj from __objects
+        Args:
+            obj: Object to delete
+        """
         if obj:
-            for key in self.__objects:
-                idn = key.split('.')
-                if obj.id == idn[1]:
-                    del self.__objects[key]
-                    break
+            remove_key = "{}.{}".format(type(obj).__name__, obj.id)
+            self.__objects.pop(remove_key, 0)
             self.save()
 
     def close(self):
-        """
-        Calls reload() method for deserializing the JSON file to objects
+        """call reload() method for deserializing the JSON objects
         """
         self.reload()

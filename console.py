@@ -41,33 +41,47 @@ class HBNBCommand(cmd.Cmd):
         try:
             if not line:
                 raise SyntaxError()
-            my_list = line.split(" ")
-            dic = {}
-            for i in range(1, len(my_list)):
-                elem = my_list[i]
-                kv = elem.split('=')
-                if len(kv) == 1 or "" in kv:
-                    continue
-                if len(kv) > 1 and kv[1][0] == '"':
-                    kv[1] = kv[1].strip('"').replace('_', ' ')
-                    if kv[1].count('"') != kv[1].count('\\\"'):
-                        continue
-                    else:
-                        kv[1] = kv[1].replace('\\', '')
-                try:
-                    kv[1] = eval(kv[1])
-                except Exception as e:
-                    pass
-                if len(kv) == 2:
-                    dic[kv[0]] = kv[1]
 
-            if dic:
-                obj = eval("{}(**dic)".format(my_list[0]))
-            else:
-                obj = eval("{}()".format(my_list[0]))
+            my_list = line.split(" ")
+
+            listakwargs = []
+
+            for i in my_list[1:]:
+                try:
+                    # check params. Param syntax: <key name>=<value>
+                    listasplit = i.split("=")
+                    x = i
+
+                    # if param doesnt fit is ignored(skiped)
+                    if len(listasplit) == 2:
+
+                        if(listasplit[1]) == '':
+                            raise ValueError()
+
+                        value = listasplit[1]
+
+                        # validate value string syntax
+                        if value[0] == '"' and value[len(value) - 1] == '"':
+                            # replace "_" for space to store
+                            if '_' in value:
+                                listasplit[1] = str(value.replace('_', ' '))
+                                x = "=".join(listasplit)
+
+                        elif value[0] == '"' and value[len(value) - 1] != '"':
+                            raise ValueError()
+                        elif value[0] != '"' and value[len(value) - 1] == '"':
+                            raise ValueError()
+
+                        listakwargs.append(x)
+                    else:
+                        raise ValueError()
+                except ValueError:
+                    continue
+
+            ka = ",".join(listakwargs)
+            obj = eval("{}({})".format(my_list[0], ka))
             obj.save()
             print("{}".format(obj.id))
-
         except SyntaxError:
             print("** class name missing **")
         except NameError:
@@ -157,7 +171,6 @@ class HBNBCommand(cmd.Cmd):
                 if name[0] == args[0]:
                     my_list.append(objects[key])
             print(my_list)
-
         except NameError:
             print("** class doesn't exist **")
 
